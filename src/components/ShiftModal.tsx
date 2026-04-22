@@ -37,7 +37,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
 
     const fetchWorkplaces = async () => {
         try {
-            const res = await api.get('/api/workplaces.php');
+            const res = await api.get('/api/workplaces');
             setWorkplaces(res.data);
         } catch (error) {
             console.error('Failed to fetch workplaces');
@@ -91,9 +91,9 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
 
         try {
             if (initialData?.id) {
-                await api.put(`/api/shifts/manage.php?id=${initialData.id}`, formData);
+                await api.put(`/api/shifts/${initialData.id}`, formData);
             } else {
-                await api.post('/api/shifts/index.php', formData);
+                await api.post('/api/shifts', formData);
             }
             onSave();
             onClose();
@@ -253,7 +253,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                     if (confirm('Tem certeza que deseja excluir este plantão?')) {
                                         setLoading(true);
                                         try {
-                                            await api.delete(`/api/shifts/manage.php?id=${initialData.id}`);
+                                            await api.delete(`/api/shifts/${initialData.id}`);
                                             onSave();
                                             onClose();
                                         } catch (error) {

@@ -30,10 +30,10 @@ const CalendarView: React.FC = () => {
 
     const fetchShifts = async () => {
         try {
-            // Note: In deployed PHP backend the path matches /api/shifts/index.php
+            // Note: In deployed PHP backend the path matches /api/shifts
             // But api.ts baseURL handles standard calls.
-            // If using the deployment structure: /api/shifts/index.php
-            const res = await api.get('/api/shifts/index.php');
+            // If using the deployment structure: /api/shifts
+            const res = await api.get('/api/shifts');
             setShifts(res.data);
         } catch (error) {
             console.error("Failed to fetch shifts", error);

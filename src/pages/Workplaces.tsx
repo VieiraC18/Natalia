@@ -21,7 +21,7 @@ const Workplaces: React.FC = () => {
 
     const fetchWorkplaces = async () => {
         try {
-            const res = await api.get('/api/workplaces.php');
+            const res = await api.get('/api/workplaces');
             setWorkplaces(res.data);
         } catch (error) {
             console.error('Error fetching workplaces', error);
@@ -33,7 +33,7 @@ const Workplaces: React.FC = () => {
     const handleDelete = async (id: string) => {
         if (!confirm('Tem certeza que deseja remover este local?')) return;
         try {
-            await api.delete(`/api/workplaces.php?id=${id}`);
+            await api.delete(`/api/workplaces?id=${id}`);
             setWorkplaces(workplaces.filter(w => w.id !== id));
         } catch (error) {
             alert('Erro ao deletar local');
@@ -43,7 +43,7 @@ const Workplaces: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/api/workplaces.php', newItem);
+            await api.post('/api/workplaces', newItem);
             setShowForm(false);
             setNewItem({ name: '', address: '', default_payment: '' });
             fetchWorkplaces();

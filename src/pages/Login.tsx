@@ -27,7 +27,8 @@ const Login: React.FC = () => {
             window.location.href = '/';
         } catch (err: any) {
             console.error('Login failed:', err);
-            setError(err.response?.data?.error || 'Falha no login. Verifique suas credenciais.');
+            const apiError = err.response?.data?.error;
+            setError(typeof apiError === 'string' ? apiError : (apiError?.message || 'Falha no login. Verifique suas credenciais.'));
         } finally {
             setLoading(false);
         }

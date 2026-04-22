@@ -23,7 +23,7 @@ const AdminPanel: React.FC = () => {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await api.get(`/api/admin_users.php?type=${activeTab}`);
+            const res = await api.get(`/api/admin?type=${activeTab}`);
             setUsers(res.data);
         } catch (error) {
             console.error('Failed to fetch users');
@@ -36,7 +36,7 @@ const AdminPanel: React.FC = () => {
         if (action === 'delete' && !confirm('Tem certeza que deseja excluir permanentemente este usuário?')) return;
 
         try {
-            await api.post('/api/admin_users.php', { user_id: userId, action });
+            await api.post('/api/admin', { user_id: userId, action });
             fetchUsers(); // Refresh list
         } catch (error) {
             alert('Erro ao processar ação');

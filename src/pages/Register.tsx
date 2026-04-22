@@ -32,7 +32,7 @@ const Register: React.FC = () => {
         setLoading(true);
 
         try {
-            await api.post('/api/auth/register.php', {
+            await api.post('/api/auth/register', {
                 name: formData.name,
                 email: formData.email,
                 password: formData.password

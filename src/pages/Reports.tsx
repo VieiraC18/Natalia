@@ -29,7 +29,7 @@ const Reports: React.FC = () => {
     const fetchShifts = async () => {
         try {
             setLoading(true);
-            const res = await api.get(`/api/shifts/index.php?start=${startDate}T00:00:00&end=${endDate}T23:59:59`);
+            const res = await api.get(`/api/shifts?start=${startDate}T00:00:00&end=${endDate}T23:59:59`);
             setShifts(res.data);
         } catch (error) {
             console.error('Error fetching dashboard data', error);
