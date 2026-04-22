@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticateJWT, AuthRequest } from '../middleware/auth.middleware';
-import { pool } from '../index';
+import { pool } from '../db';
 
 const router = express.Router();
 

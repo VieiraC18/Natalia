@@ -1,6 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { pool } from '../index';
+import { pool } from '../db';
 import { verifyGoogleToken, checkWhitelist, authenticateJWT, AuthRequest } from '../middleware/auth.middleware';
 
 const router = express.Router();

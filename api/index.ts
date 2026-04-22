@@ -9,10 +9,6 @@ dotenv.config();
 const app = express();
 
 
-// Database Connection
-export const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-});
 
 // Middleware
 app.use(helmet());

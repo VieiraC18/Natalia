@@ -1,5 +1,5 @@
 import express from 'express';
-import { pool } from '../index';
+import { pool } from '../db';
 import { authenticateJWT, AuthRequest } from '../middleware/auth.middleware';
 
 const router = express.Router();
