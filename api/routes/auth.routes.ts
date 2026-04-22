@@ -5,6 +5,35 @@ import { verifyGoogleToken, checkWhitelist, authenticateJWT, AuthRequest } from 
 
 const router = express.Router();
 
+// POST /auth/login (Email & Password)
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (result.rows.length === 0) return res.status(401).json({ error: 'Credenciais inválidas' });
+        
+        const user = result.rows[0];
+        
+        // Simple mock comparison since we bypassed bcrypt for rapid prototyping
+        if (password !== user.password_hash) {
+            return res.status(401).json({ error: 'Senha incorreta' });
+        }
+
+        const jwtToken = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            (process.env.JWT_SECRET || 'fallback_secret_123') as string,
+            { expiresIn: '24h' }
+        );
+
+        res.json({ token: jwtToken, user });
+    } catch (e) {
+        console.error('Login Error', e);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 // POST /auth/google
 router.post('/google', async (req, res) => {
     const { token } = req.body;

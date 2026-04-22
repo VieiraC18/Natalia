@@ -18,7 +18,7 @@ const Login: React.FC = () => {
 
         try {
             // Updated endpoint for PHP Backend
-            const response = await api.post('/api/auth/login.php', { email, password });
+            const response = await api.post('/api/auth/login', { email, password });
 
             const { token, user } = response.data;
             login(token, user);
