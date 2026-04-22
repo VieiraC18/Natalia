@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Allow Authorization Header
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Simple Routing if needed, but we used direct file paths for safety
+# RewriteRule ^api/shifts/([0-9]+)$ api/shifts/manage.php?id=$1 [L,QSA]
