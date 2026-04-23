@@ -24,12 +24,14 @@ import shiftsRoutes from './routes/shifts.routes';
 import statsRoutes from './routes/stats.routes';
 import aiRoutes from './routes/ai.routes';
 import adminRoutes from './routes/admin.routes';
+import workplacesRoutes from './routes/workplaces.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/shifts', shiftsRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/workplaces', workplacesRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

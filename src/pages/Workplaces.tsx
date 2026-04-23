@@ -3,6 +3,7 @@ import { Plus, Trash2, MapPin, Building } from 'lucide-react';
 import api from '../api';
 
 interface Workplace {
+    tax_percentage?: number;
     id: string;
     name: string;
     address?: string;
@@ -13,7 +14,7 @@ const Workplaces: React.FC = () => {
     const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
-    const [newItem, setNewItem] = useState({ name: '', address: '', default_payment: '' });
+    const [newItem, setNewItem] = useState({ name: '', address: '', default_payment: '', tax_percentage: '' });
 
     useEffect(() => {
         fetchWorkplaces();
@@ -45,7 +46,7 @@ const Workplaces: React.FC = () => {
         try {
             await api.post('/api/workplaces', newItem);
             setShowForm(false);
-            setNewItem({ name: '', address: '', default_payment: '' });
+            setNewItem({ name: '', address: '', default_payment: '', tax_percentage: '' });
             fetchWorkplaces();
         } catch (error) {
             alert('Erro ao criar local');
@@ -102,6 +103,16 @@ const Workplaces: React.FC = () => {
                                     onChange={e => setNewItem({ ...newItem, default_payment: e.target.value })}
                                 />
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Imposto/Desconto (%)</label>
+                                <input
+                                    type="number" step="0.1" max="100" min="0"
+                                    className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="Ex: 27.5"
+                                    value={newItem.tax_percentage}
+                                    onChange={e => setNewItem({ ...newItem, tax_percentage: e.target.value })}
+                                />
+                            </div>
                         </div>
                         <div className="flex gap-2 justify-end">
                             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
@@ -129,6 +140,11 @@ const Workplaces: React.FC = () => {
                                     <p className="text-sm font-medium text-green-600 mt-2">
                                         R$ {Number(place.default_payment).toFixed(2)} (base)
                                     </p>
+                                )}
+                                {place.tax_percentage && Number(place.tax_percentage) > 0 && (
+                                    <span className="inline-block mt-2 px-2 py-1 bg-red-50 text-red-600 text-xs font-semibold rounded-md">
+                                        -{Number(place.tax_percentage)}% Imposto
+                                    </span>
                                 )}
                             </div>
                         </div>
