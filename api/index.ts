@@ -36,4 +36,4 @@ app.get('/api/health', (req, res) => {
 });
 
 // Export Serverless Function
-export default app;
+module.exports = app;
