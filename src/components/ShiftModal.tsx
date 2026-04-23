@@ -13,6 +13,7 @@ interface Workplace {
     id: string;
     name: string;
     default_payment?: number;
+    tax_percentage?: number;
 }
 
 const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initialData }) => {
@@ -78,7 +79,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
             setFormData(prev => ({
                 ...prev,
                 location_name: place.name,
-                payment_amount: place.default_payment ? place.default_payment.toString() : prev.payment_amount
+                payment_amount: place.default_payment ? place.default_payment.toString() : prev.payment_amount,
+                tax_percentage: place.tax_percentage ? place.tax_percentage.toString() : prev.tax_percentage
             }));
         } else {
             setFormData(prev => ({ ...prev, location_name: selectedId }));

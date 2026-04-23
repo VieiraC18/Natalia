@@ -61,6 +61,7 @@ const Reports: React.FC = () => {
 
     const totalEarnings = shifts.reduce((sum, s) => sum + Number(s.payment_amount), 0);
     const totalNetEarnings = shifts.reduce((sum, s) => {
+
         const gross = Number(s.payment_amount);
         const tax = Number(s.tax_percentage || 0);
         return sum + (gross * (1 - tax / 100));
@@ -161,14 +162,14 @@ const Reports: React.FC = () => {
             </header>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-green-100 rounded-full">
                             <DollarSign className="w-6 h-6 text-green-600" />
                         </div>
                         <div>
-                            <p className="text-sm text-slate-500">Ganhos Brutos</p>
+                            <p className="text-sm text-slate-500">Valor Bruto</p>
                             <h3 className="text-2xl font-bold text-slate-900">R$ {totalEarnings.toFixed(2)}</h3>
                         </div>
                     </div>
@@ -179,7 +180,7 @@ const Reports: React.FC = () => {
                             <DollarSign className="w-6 h-6 text-emerald-700" />
                         </div>
                         <div>
-                            <p className="text-sm text-emerald-700 font-medium">Ganhos Líquidos</p>
+                            <p className="text-sm text-emerald-700 font-medium">Valor Líquido</p>
                             <h3 className="text-2xl font-bold text-emerald-900">R$ {totalNetEarnings.toFixed(2)}</h3>
                         </div>
                     </div>
