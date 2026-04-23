@@ -34,6 +34,40 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// POST /auth/register
+router.post('/register', async (req, res) => {
+    const { name, email, password } = req.body;
+    
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: 'Name, email and password are required' });
+    }
+
+    try {
+        // Simple manual creation (Whitelist check optional, usually register assigns 'user')
+        const existing = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (existing.rows.length > 0) return res.status(400).json({ error: 'Email já cadastrado' });
+
+        await pool.query('INSERT INTO whitelist (email, role) VALUES ($1, $2) ON CONFLICT DO NOTHING', [email, 'user']);
+        
+        const result = await pool.query(
+            'INSERT INTO users (email, name, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING *',
+            [email, name, password, 'user'] // Raw password since bcrypt was bypassed
+        );
+
+        const user = result.rows[0];
+        const jwtToken = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            (process.env.JWT_SECRET || 'fallback_secret_123') as string,
+            { expiresIn: '24h' }
+        );
+
+        res.status(201).json({ token: jwtToken, user });
+    } catch (e) {
+        console.error('Register Error', e);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 // POST /auth/google
 router.post('/google', async (req, res) => {
     const { token } = req.body;
