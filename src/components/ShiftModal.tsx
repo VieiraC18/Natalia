@@ -175,8 +175,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl flex flex-col relative animate-scale-up" style={{ maxHeight: 'calc(100dvh - env(keyboard-inset-height, 0px) - 2rem)' }}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-2xl flex flex-col relative animate-scale-up max-h-[92dvh]">
                 <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 rounded-t-2xl shrink-0">
                     <h2 className="text-xl font-bold text-gray-900">
                         {initialData ? 'Editar Plantão' : 'Novo Plantão'}
@@ -186,7 +186,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                     </button>
                 </div>
 
-                <div className="overflow-y-auto flex-1 p-4 sm:p-6">
+                <div className="overflow-y-auto flex-1 p-4 sm:p-6 pb-8 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
                     <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Basic Info */}
                     <div className="space-y-4">
