@@ -127,7 +127,20 @@ const CalendarView: React.FC = () => {
                     eventClick={handleEventClick}
                     contentHeight="auto"
                     handleWindowResize={true}
-                    dayHeaderFormat={{ weekday: 'short' }}
+                    dayHeaderContent={(args) => {
+                        const dayName = args.date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+                        const dayNum = args.date.getDate();
+                        const isToday = args.isToday;
+                        
+                        return (
+                            <div className="flex flex-col items-center justify-center py-1">
+                                <span className="text-[10px] font-normal text-slate-500 uppercase">{dayName}</span>
+                                <span className={`text-[13px] font-bold mt-0.5 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-blue-600 text-white' : 'text-slate-800'}`}>
+                                    {dayNum}
+                                </span>
+                            </div>
+                        );
+                    }}
                     eventTimeFormat={{
                         hour: '2-digit',
                         minute: '2-digit',

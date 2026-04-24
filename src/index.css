@@ -60,7 +60,7 @@
   /* Make calendar cells and text smaller to fit perfectly */
   .fc-col-header-cell-cushion {
     font-size: 0.7rem !important;
-    padding: 2px !important;
+    padding: 0px !important;
   }
   
   .fc-daygrid-day-number {
@@ -73,7 +73,22 @@
   }
   
   .fc-timegrid-slot-label-cushion {
-    font-size: 0.7rem !important;
+    font-size: 10px !important;
+    padding: 0 2px !important;
+  }
+  
+  .fc .fc-timegrid-axis {
+    width: 44px !important;
+    font-size: 10px !important;
+    padding: 0 !important;
+  }
+  
+  .fc .fc-timegrid-slot {
+    height: 40px !important;
+  }
+  
+  .fc .fc-col-header-cell {
+    padding: 0 !important;
   }
 }
 
