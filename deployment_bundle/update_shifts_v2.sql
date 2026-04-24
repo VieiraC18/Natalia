@@ -1,0 +1,10 @@
+-- Adicionar novas colunas na tabela shifts para novos cálculos de plantão
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS payment_type VARCHAR(50) DEFAULT 'fixed';
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS hourly_rate DECIMAL(10, 2) DEFAULT 0;
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS worked_hours DECIMAL(5, 2) DEFAULT 0;
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS per_patient_rate DECIMAL(10, 2) DEFAULT 0;
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS estimated_patients INT DEFAULT 0;
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS attended_patients INT DEFAULT 0;
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS return_patients INT DEFAULT 0;
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS deduct_lunch BOOLEAN DEFAULT FALSE;
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS recurrence_group_id VARCHAR(100) DEFAULT NULL;

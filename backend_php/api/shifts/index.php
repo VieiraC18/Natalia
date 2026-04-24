@@ -57,19 +57,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO shifts (user_id, location_name, location_address, start_time, end_time, payment_amount, shift_type, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([
-            $userId,
-            $data->location_name ?? 'Unknown',
-            $data->location_address ?? '',
-            str_replace('T', ' ', $data->start_time), // Fix: Remove T from datetime-local
-            str_replace('T', ' ', $data->end_time),   // Fix: Remove T from datetime-local
-            $data->payment_amount ?? 0,
-            $data->shift_type ?? 'regular',
-            $data->notes ?? ''
-        ]);
+        $payment_type = $data->payment_type ?? 'fixed';
+        $hourly_rate = $data->hourly_rate ?? 0;
+        $worked_hours = $data->worked_hours ?? 0;
+        $per_patient_rate = $data->per_patient_rate ?? 0;
+        $estimated_patients = $data->estimated_patients ?? 0;
+        $attended_patients = $data->attended_patients ?? 0;
+        $return_patients = $data->return_patients ?? 0;
+        $deduct_lunch = isset($data->deduct_lunch) && $data->deduct_lunch ? 1 : 0;
+        
+        $is_recurring = isset($data->is_recurring) && $data->is_recurring;
+        $recurrence_end_date = $data->recurrence_end_date ?? null;
+        
+        // Helper func to insert a shift
+        $insertShift = function($startDate, $endDate, $groupId) use ($pdo, $userId, $data, $payment_type, $hourly_rate, $worked_hours, $per_patient_rate, $estimated_patients, $attended_patients, $return_patients, $deduct_lunch) {
+            $stmt = $pdo->prepare("INSERT INTO shifts (user_id, location_name, location_address, start_time, end_time, payment_amount, shift_type, payment_type, hourly_rate, worked_hours, per_patient_rate, estimated_patients, attended_patients, return_patients, deduct_lunch, recurrence_group_id, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([
+                $userId,
+                $data->location_name ?? 'Unknown',
+                $data->location_address ?? '',
+                $startDate,
+                $endDate,
+                $data->payment_amount ?? 0,
+                $data->shift_type ?? 'regular',
+                $payment_type,
+                $hourly_rate,
+                $worked_hours,
+                $per_patient_rate,
+                $estimated_patients,
+                $attended_patients,
+                $return_patients,
+                $deduct_lunch,
+                $groupId,
+                $data->notes ?? ''
+            ]);
+            return $pdo->lastInsertId();
+        };
 
-        $newId = $pdo->lastInsertId();
+        $baseStart = str_replace('T', ' ', $data->start_time);
+        $baseEnd = str_replace('T', ' ', $data->end_time);
+
+        if ($is_recurring && $recurrence_end_date) {
+            $groupId = uniqid('rec_');
+            $currentStart = new DateTime($baseStart);
+            $currentEnd = new DateTime($baseEnd);
+            $limitDate = new DateTime($recurrence_end_date);
+            $limitDate->setTime(23, 59, 59);
+
+            $lastInsertedId = null;
+            while ($currentStart <= $limitDate) {
+                $lastInsertedId = $insertShift($currentStart->format('Y-m-d H:i:s'), $currentEnd->format('Y-m-d H:i:s'), $groupId);
+                // Add 1 week
+                $currentStart->modify('+7 days');
+                $currentEnd->modify('+7 days');
+            }
+            $newId = $lastInsertedId; // Return the last one or maybe the first one. Let's return the last inserted to not break the frontend format.
+        } else {
+            $newId = $insertShift($baseStart, $baseEnd, null);
+        }
 
         // Fetch the created shift
         $stmt = $pdo->prepare("SELECT * FROM shifts WHERE id = ?");

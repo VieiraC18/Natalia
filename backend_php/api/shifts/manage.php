@@ -30,15 +30,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             exit;
         }
 
-        $sql = "UPDATE shifts SET location_name=?, location_address=?, start_time=?, end_time=?, payment_amount=?, shift_type=?, notes=?, updated_at=NOW() WHERE id=? AND user_id=?";
+        $payment_type = $data->payment_type ?? 'fixed';
+        $hourly_rate = $data->hourly_rate ?? 0;
+        $worked_hours = $data->worked_hours ?? 0;
+        $per_patient_rate = $data->per_patient_rate ?? 0;
+        $estimated_patients = $data->estimated_patients ?? 0;
+        $attended_patients = $data->attended_patients ?? 0;
+        $return_patients = $data->return_patients ?? 0;
+        $deduct_lunch = isset($data->deduct_lunch) && $data->deduct_lunch ? 1 : 0;
+
+        $sql = "UPDATE shifts SET location_name=?, location_address=?, start_time=?, end_time=?, payment_amount=?, shift_type=?, payment_type=?, hourly_rate=?, worked_hours=?, per_patient_rate=?, estimated_patients=?, attended_patients=?, return_patients=?, deduct_lunch=?, notes=?, updated_at=NOW() WHERE id=? AND user_id=?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             $data->location_name,
             $data->location_address,
-            $data->start_time,
-            $data->end_time,
+            str_replace('T', ' ', $data->start_time),
+            str_replace('T', ' ', $data->end_time),
             $data->payment_amount,
             $data->shift_type,
+            $payment_type,
+            $hourly_rate,
+            $worked_hours,
+            $per_patient_rate,
+            $estimated_patients,
+            $attended_patients,
+            $return_patients,
+            $deduct_lunch,
             $data->notes,
             $id,
             $userId

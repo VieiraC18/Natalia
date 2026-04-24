@@ -15,6 +15,13 @@ router.post('/login', async (req, res) => {
         if (result.rows.length === 0) return res.status(401).json({ error: 'Credenciais inválidas' });
         
         const user = result.rows[0];
+
+        if (user.status === 'pending') {
+            return res.status(403).json({ error: 'Sua conta está em análise pelo administrador. Tente novamente mais tarde.' });
+        }
+        if (user.status === 'suspended') {
+            return res.status(403).json({ error: 'Sua conta foi suspensa.' });
+        }
         
         // Simple mock comparison since we bypassed bcrypt for rapid prototyping
         if (password !== user.password_hash) {

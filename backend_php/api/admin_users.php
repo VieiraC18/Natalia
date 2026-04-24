@@ -51,6 +51,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
         $stmt->execute([$data->user_id]);
         echo json_encode(['message' => 'Usuário removido']);
+        
+    } elseif ($data->action === 'edit') {
+        if (!isset($data->name) || !isset($data->email) || !isset($data->role)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing fields for edit']);
+            exit;
+        }
+        $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?");
+        $stmt->execute([$data->name, $data->email, $data->role, $data->user_id]);
+        echo json_encode(['message' => 'Usuário atualizado']);
     }
 }
 ?>

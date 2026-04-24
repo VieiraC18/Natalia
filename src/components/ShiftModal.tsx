@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, DollarSign, FileText, Briefcase } from 'lucide-react';
+import { X, MapPin, DollarSign, FileText, Briefcase, Calculator, Repeat, Clock, Users } from 'lucide-react';
 import api from '../api';
 
 interface ShiftModalProps {
@@ -27,7 +27,17 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
         payment_amount: '',
         tax_percentage: '0',
         shift_type: 'regular',
-        notes: ''
+        notes: '',
+        payment_type: 'fixed',
+        hourly_rate: '',
+        worked_hours: '',
+        per_patient_rate: '',
+        estimated_patients: '',
+        attended_patients: '',
+        return_patients: '',
+        deduct_lunch: false,
+        is_recurring: false,
+        recurrence_end_date: ''
     });
 
     useEffect(() => {
@@ -55,7 +65,17 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                 payment_amount: initialData.payment_amount || '',
                 tax_percentage: initialData.tax_percentage !== undefined ? initialData.tax_percentage.toString() : '0',
                 shift_type: initialData.shift_type || 'regular',
-                notes: initialData.notes || ''
+                notes: initialData.notes || '',
+                payment_type: initialData.payment_type || 'fixed',
+                hourly_rate: initialData.hourly_rate || '',
+                worked_hours: initialData.worked_hours || '',
+                per_patient_rate: initialData.per_patient_rate || '',
+                estimated_patients: initialData.estimated_patients || '',
+                attended_patients: initialData.attended_patients || '',
+                return_patients: initialData.return_patients || '',
+                deduct_lunch: initialData.deduct_lunch ? true : false,
+                is_recurring: false,
+                recurrence_end_date: ''
             });
         } else {
             setFormData({
@@ -66,20 +86,57 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                 payment_amount: '',
                 tax_percentage: '0',
                 shift_type: 'regular',
-                notes: ''
+                notes: '',
+                payment_type: 'fixed',
+                hourly_rate: '',
+                worked_hours: '',
+                per_patient_rate: '',
+                estimated_patients: '',
+                attended_patients: '',
+                return_patients: '',
+                deduct_lunch: false,
+                is_recurring: false,
+                recurrence_end_date: ''
             });
         }
     }, [initialData, isOpen]);
 
+    // Recalculate payment_amount when dependent fields change
+    useEffect(() => {
+        let calculated = 0;
+        if (formData.payment_type === 'hourly') {
+            const hours = parseFloat(formData.worked_hours) || 0;
+            const rate = parseFloat(formData.hourly_rate) || 0;
+            const finalHours = formData.deduct_lunch ? Math.max(0, hours - 1) : hours;
+            calculated = finalHours * rate;
+            setFormData(prev => ({ ...prev, payment_amount: calculated.toFixed(2) }));
+        } else if (formData.payment_type === 'per_patient') {
+            const attended = parseInt(formData.attended_patients) || 0;
+            const returns = parseInt(formData.return_patients) || 0;
+            const rate = parseFloat(formData.per_patient_rate) || 0;
+            const billable = Math.max(0, attended - returns);
+            calculated = billable * rate;
+            setFormData(prev => ({ ...prev, payment_amount: calculated.toFixed(2) }));
+        }
+    }, [
+        formData.payment_type, 
+        formData.hourly_rate, 
+        formData.worked_hours, 
+        formData.deduct_lunch, 
+        formData.per_patient_rate, 
+        formData.attended_patients, 
+        formData.return_patients
+    ]);
+
     const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedId = e.target.value;
-        const place = workplaces.find(w => w.name === selectedId); // using name as value for compatibility
+        const place = workplaces.find(w => w.name === selectedId);
 
         if (place) {
             setFormData(prev => ({
                 ...prev,
                 location_name: place.name,
-                payment_amount: place.default_payment ? place.default_payment.toString() : prev.payment_amount,
+                payment_amount: place.default_payment && prev.payment_type === 'fixed' ? place.default_payment.toString() : prev.payment_amount,
                 tax_percentage: place.tax_percentage ? place.tax_percentage.toString() : prev.tax_percentage
             }));
         } else {
@@ -110,10 +167,17 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
 
     if (!isOpen) return null;
 
+    const estimatedGainsPerPatient = () => {
+        const est = parseInt(formData.estimated_patients) || 0;
+        const returns = parseInt(formData.return_patients) || 0;
+        const rate = parseFloat(formData.per_patient_rate) || 0;
+        return (Math.max(0, est - returns) * rate).toFixed(2);
+    };
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-scale-up">
-                <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl my-8 relative animate-scale-up">
+                <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-gray-100 rounded-t-2xl">
                     <h2 className="text-xl font-bold text-gray-900">
                         {initialData ? 'Editar Plantão' : 'Novo Plantão'}
                     </h2>
@@ -122,7 +186,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    {/* Basic Info */}
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Local</label>
@@ -145,7 +210,6 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                     </datalist>
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">Dica: Cadastre locais na aba "Meus Locais" para aparecerem aqui.</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -173,18 +237,18 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Valor Bruto (R$)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Classificação</label>
                                 <div className="relative">
-                                    <DollarSign className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        required
-                                        placeholder="0.00"
-                                        className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
-                                        value={formData.payment_amount}
-                                        onChange={e => setFormData({ ...formData, payment_amount: e.target.value })}
-                                    />
+                                    <Briefcase className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                    <select
+                                        className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all appearance-none bg-white"
+                                        value={formData.shift_type}
+                                        onChange={e => setFormData({ ...formData, shift_type: e.target.value })}
+                                    >
+                                        <option value="regular">Regular</option>
+                                        <option value="extra">Extra</option>
+                                        <option value="night">Noturno</option>
+                                    </select>
                                 </div>
                             </div>
                             <div>
@@ -205,50 +269,240 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {formData.payment_amount && (
-                            <div className="bg-emerald-50 text-emerald-700 p-3 rounded-lg text-sm border border-emerald-100">
-                                Ganho Líquido Estimado: <strong className="font-bold">
-                                    R$ {(parseFloat(formData.payment_amount) * (1 - (parseFloat(formData.tax_percentage) || 0) / 100)).toFixed(2)}
-                                </strong>
+                    {/* Financial Section */}
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-4">
+                        <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                            <Calculator className="w-5 h-5 text-blue-600" />
+                            Cálculo de Ganhos
+                        </h3>
+                        
+                        <div className="flex bg-white rounded-lg border border-gray-200 p-1">
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, payment_type: 'fixed' })}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${formData.payment_type === 'fixed' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                            >
+                                Fixo
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, payment_type: 'hourly' })}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${formData.payment_type === 'hourly' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                            >
+                                Por Hora
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, payment_type: 'per_patient' })}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${formData.payment_type === 'per_patient' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                            >
+                                Por Paciente
+                            </button>
+                        </div>
+
+                        {/* Fixed Payment */}
+                        {formData.payment_type === 'fixed' && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Valor Bruto (R$)</label>
+                                <div className="relative">
+                                    <DollarSign className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        required
+                                        placeholder="0.00"
+                                        className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                                        value={formData.payment_amount}
+                                        onChange={e => setFormData({ ...formData, payment_amount: e.target.value })}
+                                    />
+                                </div>
                             </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                                <div className="relative">
-                                    <Briefcase className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                                    <select
-                                        className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all appearance-none bg-white"
-                                        value={formData.shift_type}
-                                        onChange={e => setFormData({ ...formData, shift_type: e.target.value })}
-                                    >
-                                        <option value="regular">Regular</option>
-                                        <option value="extra">Extra</option>
-                                        <option value="night">Noturno</option>
-                                    </select>
+                        {/* Hourly Payment */}
+                        {formData.payment_type === 'hourly' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Valor da Hora (R$)</label>
+                                        <div className="relative">
+                                            <DollarSign className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                required
+                                                placeholder="0.00"
+                                                className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                                                value={formData.hourly_rate}
+                                                onChange={e => setFormData({ ...formData, hourly_rate: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Horas Trabalhadas</label>
+                                        <div className="relative">
+                                            <Clock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                            <input
+                                                type="number"
+                                                step="0.5"
+                                                required
+                                                placeholder="0"
+                                                className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                                                value={formData.worked_hours}
+                                                onChange={e => setFormData({ ...formData, worked_hours: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        className="rounded text-blue-600 focus:ring-blue-500"
+                                        checked={formData.deduct_lunch}
+                                        onChange={(e) => setFormData({...formData, deduct_lunch: e.target.checked})}
+                                    />
+                                    Desconta 1 hora de almoço
+                                </label>
+                            </div>
+                        )}
+
+                        {/* Per Patient Payment */}
+                        {formData.payment_type === 'per_patient' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Valor por Paciente (R$)</label>
+                                    <div className="relative">
+                                        <DollarSign className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            required
+                                            placeholder="0.00"
+                                            className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                                            value={formData.per_patient_rate}
+                                            onChange={e => setFormData({ ...formData, per_patient_rate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Estimados</label>
+                                        <div className="relative">
+                                            <Users className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                            <input
+                                                type="number"
+                                                required
+                                                placeholder="0"
+                                                className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                                                value={formData.estimated_patients}
+                                                onChange={e => setFormData({ ...formData, estimated_patients: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Compareceram</label>
+                                        <div className="relative">
+                                            <Users className="absolute left-3 top-3 w-4 h-4 text-blue-400" />
+                                            <input
+                                                type="number"
+                                                required
+                                                placeholder="0"
+                                                className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-blue-50"
+                                                value={formData.attended_patients}
+                                                onChange={e => setFormData({ ...formData, attended_patients: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Retornos (Grátis)</label>
+                                        <div className="relative">
+                                            <Users className="absolute left-3 top-3 w-4 h-4 text-orange-400" />
+                                            <input
+                                                type="number"
+                                                required
+                                                placeholder="0"
+                                                className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-orange-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 focus:outline-none transition-all bg-orange-50"
+                                                value={formData.return_patients}
+                                                onChange={e => setFormData({ ...formData, return_patients: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-xs text-gray-500 text-right">
+                                    *(Compareceram - Retornos) × Valor
+                                </div>
+                                <div className="bg-gray-100 p-3 rounded-lg text-sm text-gray-600 flex justify-between">
+                                    <span>Ganho Estimado (se todos fossem):</span>
+                                    <span className="font-semibold">R$ {estimatedGainsPerPatient()}</span>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Notas (Opcional)</label>
-                            <div className="relative">
-                                <FileText className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                                <textarea
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all resize-none"
-                                    rows={3}
-                                    placeholder="Detalhes adicionais..."
-                                    value={formData.notes}
-                                    onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                                />
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-gray-600">Total Bruto Calculado:</span>
+                                <span className="text-lg font-bold text-gray-900">
+                                    R$ {formData.payment_amount || '0.00'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center bg-emerald-50 text-emerald-800 p-3 rounded-lg border border-emerald-100">
+                                <span className="font-medium">Total Líquido a Receber:</span>
+                                <span className="text-xl font-bold">
+                                    R$ {(parseFloat(formData.payment_amount || '0') * (1 - (parseFloat(formData.tax_percentage) || 0) / 100)).toFixed(2)}
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-between pt-2">
-                        {initialData?.id && (
+                    {/* Recurrence Option (Only for new shifts) */}
+                    {!initialData?.id && (
+                        <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-3">
+                            <label className="flex items-center gap-2 font-medium text-blue-900 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                    checked={formData.is_recurring}
+                                    onChange={(e) => setFormData({...formData, is_recurring: e.target.checked})}
+                                />
+                                <Repeat className="w-4 h-4" />
+                                Repetir plantão toda semana
+                            </label>
+                            
+                            {formData.is_recurring && (
+                                <div className="pl-6 animate-fade-in">
+                                    <label className="block text-sm text-gray-700 mb-1">Data limite da repetição</label>
+                                    <input
+                                        type="date"
+                                        required={formData.is_recurring}
+                                        className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                                        value={formData.recurrence_end_date}
+                                        onChange={e => setFormData({ ...formData, recurrence_end_date: e.target.value })}
+                                        min={formData.start_time.split('T')[0]}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Notes */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Notas (Opcional)</label>
+                        <div className="relative">
+                            <FileText className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                            <textarea
+                                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all resize-none"
+                                rows={2}
+                                placeholder="Detalhes adicionais..."
+                                value={formData.notes}
+                                onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between pt-4 border-t border-gray-100">
+                        {initialData?.id ? (
                             <button
                                 type="button"
                                 onClick={async () => {
@@ -267,10 +521,10 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                 }}
                                 className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center"
                             >
-                                <span className="mr-2">Excluir</span>
+                                <Trash2 className="w-4 h-4 mr-2" /> Excluir
                             </button>
-                        )}
-                        <div className="flex gap-3 ml-auto">
+                        ) : <div />}
+                        <div className="flex gap-3">
                             <button
                                 type="button"
                                 onClick={onClose}
@@ -281,7 +535,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                             >
                                 {loading ? 'Salvando...' : 'Salvar Plantão'}
                             </button>

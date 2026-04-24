@@ -64,4 +64,34 @@ router.delete('/', async (req: AuthRequest, res) => {
     }
 });
 
+// Update workplace
+router.put('/:id', async (req: AuthRequest, res) => {
+    const { id } = req.params;
+    const { name, address, default_payment, tax_percentage } = req.body;
+    
+    if (!name) {
+        return res.status(400).json({ error: 'Name is required' });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE workplaces SET name = $1, address = $2, default_payment = $3, tax_percentage = $4, updated_at = NOW()
+             WHERE id = $5 AND user_id = $6 RETURNING *`,
+            [
+                name, 
+                address || null, 
+                default_payment ? parseFloat(default_payment) : 0,
+                tax_percentage ? parseFloat(tax_percentage) : 0,
+                id,
+                req.user!.id
+            ]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Workplace not found' });
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating workplace:', error);
+        res.status(500).json({ error: 'Failed to update workplace' });
+    }
+});
+
 export default router;

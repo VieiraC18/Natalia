@@ -61,6 +61,26 @@ function authenticate()
         exit;
     }
 
+    // Check status in DB
+    global $pdo;
+    if (isset($pdo) && isset($decodedPayload['id'])) {
+        $stmt = $pdo->prepare("SELECT status FROM users WHERE id = ?");
+        $stmt->execute([$decodedPayload['id']]);
+        $dbUser = $stmt->fetch();
+        
+        if (!$dbUser) {
+            http_response_code(401);
+            echo json_encode(['error' => 'User not found']);
+            exit;
+        }
+        
+        if ($dbUser['status'] !== 'approved') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Account pending or suspended']);
+            exit;
+        }
+    }
+
     return $decodedPayload;
 }
 ?>

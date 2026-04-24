@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, UserX, User, Loader, Users, Ban, Trash2, RefreshCw } from 'lucide-react';
+import { UserCheck, UserX, User, Loader, Users, Ban, Trash2, RefreshCw, Edit2, X } from 'lucide-react';
 import api from '../api';
 
 interface UserData {
@@ -15,6 +15,8 @@ const AdminPanel: React.FC = () => {
     const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
+    const [editingUser, setEditingUser] = useState<UserData | null>(null);
+    const [editFormData, setEditFormData] = useState({ name: '', email: '', role: '' });
 
     useEffect(() => {
         fetchUsers();
@@ -41,6 +43,29 @@ const AdminPanel: React.FC = () => {
         } catch (error) {
             alert('Erro ao processar ação');
         }
+    };
+
+    const handleEditSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingUser) return;
+        try {
+            await api.post('/api/admin', {
+                user_id: editingUser.id,
+                action: 'edit',
+                name: editFormData.name,
+                email: editFormData.email,
+                role: editFormData.role
+            });
+            setEditingUser(null);
+            fetchUsers();
+        } catch (error) {
+            alert('Erro ao editar usuário');
+        }
+    };
+
+    const openEditModal = (user: UserData) => {
+        setEditingUser(user);
+        setEditFormData({ name: user.name, email: user.email, role: user.role });
     };
 
     return (
@@ -141,34 +166,37 @@ const AdminPanel: React.FC = () => {
                                         </>
                                     ) : (
                                         <>
-                                            {user.role !== 'admin' && (
-                                                <>
-                                                    {user.status === 'suspended' ? (
-                                                        <button
-                                                            onClick={() => handleAction(user.id, 'reactivate')}
-                                                            title="Reativar Acesso"
-                                                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                                        >
-                                                            <RefreshCw className="w-5 h-5" />
-                                                        </button>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => handleAction(user.id, 'suspend')}
-                                                            title="Suspender Acesso"
-                                                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                                                        >
-                                                            <Ban className="w-5 h-5" />
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        onClick={() => handleAction(user.id, 'delete')}
-                                                        title="Excluir Usuário"
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    >
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
-                                                </>
+                                            <button
+                                                onClick={() => openEditModal(user)}
+                                                title="Editar Usuário"
+                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                            >
+                                                <Edit2 className="w-5 h-5" />
+                                            </button>
+                                            {user.status === 'suspended' ? (
+                                                <button
+                                                    onClick={() => handleAction(user.id, 'reactivate')}
+                                                    title="Reativar Acesso"
+                                                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                >
+                                                    <RefreshCw className="w-5 h-5" />
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleAction(user.id, 'suspend')}
+                                                    title="Suspender Acesso"
+                                                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                                >
+                                                    <Ban className="w-5 h-5" />
+                                                </button>
                                             )}
+                                            <button
+                                                onClick={() => handleAction(user.id, 'delete')}
+                                                title="Excluir Usuário"
+                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
                                         </>
                                     )}
                                 </div>
@@ -177,6 +205,68 @@ const AdminPanel: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Edit User Modal */}
+            {editingUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-scale-up">
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                            <h2 className="text-xl font-bold text-gray-900">Editar Usuário</h2>
+                            <button onClick={() => setEditingUser(null)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                                <X className="w-5 h-5 text-gray-500" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleEditSave} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                                    value={editFormData.name}
+                                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                                <input
+                                    type="email"
+                                    required
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                                    value={editFormData.email}
+                                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nível de Acesso (Role)</label>
+                                <select
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none bg-white"
+                                    value={editFormData.role}
+                                    onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
+                                >
+                                    <option value="user">Usuário Padrão</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingUser(null)}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm"
+                                >
+                                    Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
