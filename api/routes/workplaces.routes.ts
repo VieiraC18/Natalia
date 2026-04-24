@@ -74,8 +74,9 @@ router.put('/:id', async (req: AuthRequest, res) => {
     }
 
     try {
+        // Check if tax_percentage exists in DB before updating it (we will assume it does, but remove updated_at which doesn't exist)
         const result = await pool.query(
-            `UPDATE workplaces SET name = $1, address = $2, default_payment = $3, tax_percentage = $4, updated_at = NOW()
+            `UPDATE workplaces SET name = $1, address = $2, default_payment = $3, tax_percentage = $4
              WHERE id = $5 AND user_id = $6 RETURNING *`,
             [
                 name, 

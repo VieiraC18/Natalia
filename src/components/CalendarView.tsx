@@ -104,8 +104,8 @@ const CalendarView: React.FC = () => {
                 </button>
             </header>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-6 glass-panel overflow-x-auto">
-                <div className="min-w-[700px]">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-6 glass-panel calendar-container">
+                <div className="w-full">
                     <FullCalendar
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                     initialView="dayGridMonth"
@@ -125,7 +125,9 @@ const CalendarView: React.FC = () => {
                     events={events}
                     dateClick={handleDateClick}
                     eventClick={handleEventClick}
-                    height="auto"
+                    contentHeight="auto"
+                    handleWindowResize={true}
+                    dayHeaderFormat={{ weekday: 'short' }}
                     eventTimeFormat={{
                         hour: '2-digit',
                         minute: '2-digit',

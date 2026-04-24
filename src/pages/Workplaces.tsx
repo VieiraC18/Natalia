@@ -16,6 +16,7 @@ const Workplaces: React.FC = () => {
     const [showForm, setShowForm] = useState(false);
     const [newItem, setNewItem] = useState({ name: '', address: '', default_payment: '', tax_percentage: '' });
     const [editId, setEditId] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchWorkplaces();
@@ -44,6 +45,7 @@ const Workplaces: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
         try {
             if (editId) {
                 await api.put(`/api/workplaces/${editId}`, newItem);
@@ -54,12 +56,14 @@ const Workplaces: React.FC = () => {
             setEditId(null);
             setNewItem({ name: '', address: '', default_payment: '', tax_percentage: '' });
             fetchWorkplaces();
-        } catch (error) {
-            alert('Erro ao salvar local');
+        } catch (error: any) {
+            console.error(error);
+            setError(error.response?.data?.error || 'Erro ao salvar local. Certifique-se de que o banco de dados está atualizado com as colunas corretas.');
         }
     };
 
     const handleEdit = (place: Workplace) => {
+        setError(null);
         setNewItem({ 
             name: place.name, 
             address: place.address || '', 
@@ -92,6 +96,11 @@ const Workplaces: React.FC = () => {
             {showForm && (
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 animate-fade-in">
                     <h3 className="text-lg font-bold mb-4">{editId ? 'Editar Local' : 'Adicionar Novo Local'}</h3>
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm font-medium">
+                            {error}
+                        </div>
+                    )}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid md:grid-cols-2 gap-4">
                             <div>
@@ -136,7 +145,7 @@ const Workplaces: React.FC = () => {
                             </div>
                         </div>
                         <div className="flex gap-2 justify-end">
-                            <button type="button" onClick={() => { setShowForm(false); setEditId(null); }} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                            <button type="button" onClick={() => { setShowForm(false); setEditId(null); setError(null); }} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
                             <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">{editId ? 'Atualizar' : 'Salvar'}</button>
                         </div>
                     </form>
