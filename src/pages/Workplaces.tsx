@@ -45,13 +45,29 @@ const Workplaces: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/api/workplaces', newItem);
+            if (editId) {
+                await api.put(`/api/workplaces/${editId}`, newItem);
+            } else {
+                await api.post('/api/workplaces', newItem);
+            }
             setShowForm(false);
+            setEditId(null);
             setNewItem({ name: '', address: '', default_payment: '', tax_percentage: '' });
             fetchWorkplaces();
         } catch (error) {
-            alert('Erro ao criar local');
+            alert('Erro ao salvar local');
         }
+    };
+
+    const handleEdit = (place: Workplace) => {
+        setNewItem({ 
+            name: place.name, 
+            address: place.address || '', 
+            default_payment: place.default_payment ? place.default_payment.toString() : '', 
+            tax_percentage: place.tax_percentage ? place.tax_percentage.toString() : '' 
+        });
+        setEditId(place.id);
+        setShowForm(true);
     };
 
     return (
@@ -62,7 +78,11 @@ const Workplaces: React.FC = () => {
                     <p className="text-slate-500">Gerencie os hospitais e clínicas onde você trabalha.</p>
                 </div>
                 <button
-                    onClick={() => setShowForm(true)}
+                    onClick={() => {
+                        setEditId(null);
+                        setNewItem({ name: '', address: '', default_payment: '', tax_percentage: '' });
+                        setShowForm(true);
+                    }}
                     className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
                 >
                     <Plus className="w-5 h-5" /> Novo Local
@@ -116,8 +136,8 @@ const Workplaces: React.FC = () => {
                             </div>
                         </div>
                         <div className="flex gap-2 justify-end">
-                            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
-                            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salvar</button>
+                            <button type="button" onClick={() => { setShowForm(false); setEditId(null); }} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">{editId ? 'Atualizar' : 'Salvar'}</button>
                         </div>
                     </form>
                 </div>
@@ -149,12 +169,22 @@ const Workplaces: React.FC = () => {
                                 )}
                             </div>
                         </div>
-                        <button
-                            onClick={() => handleDelete(place.id)}
-                            className="text-slate-300 hover:text-red-500 transition-colors p-2"
-                        >
-                            <Trash2 className="w-5 h-5" />
-                        </button>
+                        <div className="flex flex-col gap-2">
+                            <button
+                                onClick={() => handleEdit(place)}
+                                className="text-slate-300 hover:text-blue-500 transition-colors p-2"
+                                title="Editar Local"
+                            >
+                                <Edit2 className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => handleDelete(place.id)}
+                                className="text-slate-300 hover:text-red-500 transition-colors p-2"
+                                title="Excluir Local"
+                            >
+                                <Trash2 className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                 ))}
 

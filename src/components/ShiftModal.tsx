@@ -218,7 +218,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                 <input
                                     type="datetime-local"
                                     required
-                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none"
                                     value={formData.start_time}
                                     onChange={e => setFormData({ ...formData, start_time: e.target.value })}
                                 />
@@ -228,7 +228,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                 <input
                                     type="datetime-local"
                                     required
-                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none"
                                     value={formData.end_time}
                                     onChange={e => setFormData({ ...formData, end_time: e.target.value })}
                                 />
@@ -476,7 +476,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                     <input
                                         type="date"
                                         required={formData.is_recurring}
-                                        className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                                        className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none"
                                         value={formData.recurrence_end_date}
                                         onChange={e => setFormData({ ...formData, recurrence_end_date: e.target.value })}
                                         min={formData.start_time.split('T')[0]}
