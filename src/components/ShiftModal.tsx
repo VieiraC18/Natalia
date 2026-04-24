@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, DollarSign, FileText, Briefcase, Calculator, Repeat, Clock, Users } from 'lucide-react';
+import { X, MapPin, DollarSign, FileText, Briefcase, Calculator, Repeat, Clock, Users, Trash2 } from 'lucide-react';
 import api from '../api';
 
 interface ShiftModalProps {
