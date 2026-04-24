@@ -104,8 +104,9 @@ const CalendarView: React.FC = () => {
                 </button>
             </header>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 glass-panel">
-                <FullCalendar
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-6 glass-panel overflow-x-auto">
+                <div className="min-w-[700px]">
+                    <FullCalendar
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                     initialView="dayGridMonth"
                     locale={ptBrLocale}
@@ -137,6 +138,7 @@ const CalendarView: React.FC = () => {
                         hour12: false
                     }}
                 />
+                </div>
             </div>
 
             <ShiftModal

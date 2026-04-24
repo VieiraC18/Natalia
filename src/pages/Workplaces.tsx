@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, MapPin, Building } from 'lucide-react';
+import { Plus, Trash2, MapPin, Building, Edit2 } from 'lucide-react';
 import api from '../api';
 
 interface Workplace {
@@ -15,6 +15,7 @@ const Workplaces: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [newItem, setNewItem] = useState({ name: '', address: '', default_payment: '', tax_percentage: '' });
+    const [editId, setEditId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchWorkplaces();
@@ -70,7 +71,7 @@ const Workplaces: React.FC = () => {
 
             {showForm && (
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 animate-fade-in">
-                    <h3 className="text-lg font-bold mb-4">Adicionar Novo Local</h3>
+                    <h3 className="text-lg font-bold mb-4">{editId ? 'Editar Local' : 'Adicionar Novo Local'}</h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid md:grid-cols-2 gap-4">
                             <div>
