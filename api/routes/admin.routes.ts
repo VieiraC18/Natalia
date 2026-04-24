@@ -38,9 +38,9 @@ router.get('/', async (req, res) => {
 router.post('/', async (req: AuthRequest, res) => {
     const { user_id, action } = req.body;
     
-    // Safety check against self-modification
-    if (req.user?.id === user_id) {
-        return res.status(400).json({ error: 'Você não pode modificar sua própria conta.' });
+    // Safety check against self-modification for destructive actions
+    if (req.user?.id === user_id && action !== 'edit') {
+        return res.status(400).json({ error: 'Você não pode modificar sua própria conta dessa forma.' });
     }
 
     try {
@@ -56,8 +56,11 @@ router.post('/', async (req: AuthRequest, res) => {
             case 'suspend': newStatus = 'suspended'; break;
         }
 
-        if(action === 'reject') {
+        if (action === 'reject') {
             await pool.query('DELETE FROM users WHERE id = $1', [user_id]);
+        } else if (action === 'edit') {
+            const { name, email, role } = req.body;
+            await pool.query('UPDATE users SET name = $1, email = $2, role = $3 WHERE id = $4', [name, email, role, user_id]);
         } else {
             await pool.query('UPDATE users SET status = $1 WHERE id = $2', [newStatus, user_id]);
         }

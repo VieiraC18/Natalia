@@ -20,12 +20,24 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
     if (authHeader) {
         const token = authHeader.split(' ')[1];
 
-        jwt.verify(token, process.env.JWT_SECRET as string, (err, user) => {
+        jwt.verify(token, process.env.JWT_SECRET as string, async (err, user: any) => {
             if (err) {
                 return res.sendStatus(403);
             }
-            req.user = user as any;
-            next();
+
+            try {
+                // Check if user is still approved in the database
+                const dbUser = await pool.query('SELECT status FROM users WHERE id = $1', [user.id]);
+                if (dbUser.rows.length === 0 || dbUser.rows[0].status !== 'approved') {
+                    return res.status(403).json({ error: 'Conta pendente, suspensa ou não encontrada.' });
+                }
+
+                req.user = user as any;
+                next();
+            } catch (error) {
+                console.error('Auth DB check error:', error);
+                res.status(500).json({ error: 'Erro de verificação' });
+            }
         });
     } else {
         res.sendStatus(401);

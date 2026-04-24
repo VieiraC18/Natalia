@@ -1,0 +1,12 @@
+-- Adicionando colunas de controle financeiro na tabela shifts (PostgreSQL)
+
+ALTER TABLE shifts 
+ADD COLUMN IF NOT EXISTS payment_type VARCHAR(20) DEFAULT 'fixed',
+ADD COLUMN IF NOT EXISTS hourly_rate DECIMAL(10,2) DEFAULT 0.00,
+ADD COLUMN IF NOT EXISTS worked_hours DECIMAL(10,2) DEFAULT 0.00,
+ADD COLUMN IF NOT EXISTS per_patient_rate DECIMAL(10,2) DEFAULT 0.00,
+ADD COLUMN IF NOT EXISTS estimated_patients INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS attended_patients INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS return_patients INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS deduct_lunch BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS recurrence_group_id VARCHAR(50);
