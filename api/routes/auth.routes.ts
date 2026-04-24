@@ -50,25 +50,19 @@ router.post('/register', async (req, res) => {
     }
 
     try {
-        // Simple manual creation (Whitelist check optional, usually register assigns 'user')
+        // Simple manual creation
         const existing = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (existing.rows.length > 0) return res.status(400).json({ error: 'Email já cadastrado' });
 
         await pool.query('INSERT INTO whitelist (email, role) VALUES ($1, $2) ON CONFLICT DO NOTHING', [email, 'user']);
         
         const result = await pool.query(
-            'INSERT INTO users (email, name, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING *',
-            [email, name, password, 'user'] // Raw password since bcrypt was bypassed
+            'INSERT INTO users (email, name, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [email, name, password, 'user', 'pending'] // Set explicitly to pending
         );
 
-        const user = result.rows[0];
-        const jwtToken = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
-            (process.env.JWT_SECRET || 'fallback_secret_123') as string,
-            { expiresIn: '24h' }
-        );
-
-        res.status(201).json({ token: jwtToken, user });
+        // Do not return token if pending
+        return res.status(201).json({ message: 'Conta criada com sucesso. Aguarde a aprovação do administrador.' });
     } catch (e) {
         console.error('Register Error', e);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -104,17 +98,21 @@ router.post('/google', async (req, res) => {
         if (userResult.rows.length === 0) {
             // Create new user
             userResult = await pool.query(
-                `INSERT INTO users (google_id, email, name, avatar_url, role) 
-         VALUES ($1, $2, $3, $4, $5) 
-         RETURNING *`,
+                `INSERT INTO users (google_id, email, name, avatar_url, role, status) 
+                 VALUES ($1, $2, $3, $4, $5, 'pending') 
+                 RETURNING *`,
                 [googleUser.sub, googleUser.email, googleUser.name, googleUser.picture, role]
             );
-        } else {
-            // Update user info if needed (e.g. avatar)
-            // For now, simpler is better.
         }
 
         const user = userResult.rows[0];
+
+        if (user.status === 'pending') {
+            return res.status(403).json({ error: 'Sua conta está em análise pelo administrador. Aguarde a aprovação.' });
+        }
+        if (user.status === 'suspended') {
+            return res.status(403).json({ error: 'Sua conta foi suspensa.' });
+        }
 
         // 3. Generate JWT
         const jwtToken = jwt.sign(
