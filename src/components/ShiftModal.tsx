@@ -175,20 +175,54 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in overflow-y-auto">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl my-8 relative animate-scale-up">
-                <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 rounded-t-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl flex flex-col relative animate-scale-up" style={{ maxHeight: 'calc(100dvh - env(keyboard-inset-height, 0px) - 2rem)' }}>
+                <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 rounded-t-2xl shrink-0">
                     <h2 className="text-xl font-bold text-gray-900">
                         {initialData ? 'Editar Plantão' : 'Novo Plantão'}
                     </h2>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <button onClick={onClose} type="button" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                         <X className="w-5 h-5 text-gray-500" />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
+                <div className="overflow-y-auto flex-1 p-4 sm:p-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Basic Info */}
                     <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Início</label>
+                                <input
+                                    type="datetime-local"
+                                    required
+                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none"
+                                    value={formData.start_time}
+                                    onChange={e => setFormData({ ...formData, start_time: e.target.value })}
+                                    onFocus={(e) => {
+                                        setTimeout(() => {
+                                            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        }, 300);
+                                    }}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Término</label>
+                                <input
+                                    type="datetime-local"
+                                    required
+                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none"
+                                    value={formData.end_time}
+                                    onChange={e => setFormData({ ...formData, end_time: e.target.value })}
+                                    onFocus={(e) => {
+                                        setTimeout(() => {
+                                            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        }, 300);
+                                    }}
+                                />
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Local</label>
                             <div className="relative">
@@ -202,6 +236,11 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                         className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
                                         value={formData.location_name}
                                         onChange={e => handleLocationChange(e as any)}
+                                        onFocus={(e) => {
+                                            setTimeout(() => {
+                                                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            }, 300);
+                                        }}
                                     />
                                     <datalist id="workplaces-list">
                                         {workplaces.map(w => (
@@ -209,29 +248,6 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                         ))}
                                     </datalist>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Início</label>
-                                <input
-                                    type="datetime-local"
-                                    required
-                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none"
-                                    value={formData.start_time}
-                                    onChange={e => setFormData({ ...formData, start_time: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Término</label>
-                                <input
-                                    type="datetime-local"
-                                    required
-                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none"
-                                    value={formData.end_time}
-                                    onChange={e => setFormData({ ...formData, end_time: e.target.value })}
-                                />
                             </div>
                         </div>
 
@@ -541,7 +557,9 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                             </button>
                         </div>
                     </div>
+                    </div>
                 </form>
+                </div>
             </div>
         </div>
     );
