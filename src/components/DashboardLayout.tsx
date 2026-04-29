@@ -27,13 +27,13 @@ const DashboardLayout: React.FC = () => {
                         </button>
                     </div>
                     <div className="px-4 mb-6">
-                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                            <img src={user?.avatar_url || 'https://via.placeholder.com/40'} alt="Profile" className="w-10 h-10 rounded-full" />
+                        <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-3 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-100 transition-colors cursor-pointer group">
+                            <img src={user?.avatar_url || 'https://via.placeholder.com/40'} alt="Profile" className="w-10 h-10 rounded-full group-hover:ring-2 group-hover:ring-blue-500 transition-all" />
                             <div className="overflow-hidden">
-                                <p className="text-sm font-medium text-slate-900 truncate">{user?.name || 'Doutor(a)'}</p>
-                                <p className="text-xs text-slate-500 truncate">{user?.role}</p>
+                                <p className="text-sm font-medium text-slate-900 truncate group-hover:text-blue-700">{user?.name || 'Doutor(a)'}</p>
+                                <p className="text-xs text-slate-500 truncate group-hover:text-blue-500">{user?.role}</p>
                             </div>
-                        </div>
+                        </Link>
                     </div>
                     <nav className="mt-2 flex-1 px-2 space-y-1">
                         {user?.role === 'admin' && (

@@ -34,6 +34,23 @@ router.get('/', async (req, res) => {
     }
 });
 
+// GET /api/admin/shifts (All shifts globally)
+router.get('/shifts', async (req, res) => {
+    try {
+        const query = `
+            SELECT s.*, u.name as user_name 
+            FROM shifts s 
+            JOIN users u ON s.user_id = u.id 
+            ORDER BY s.start_time DESC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Admin GET Shifts Error', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 // POST /api/admin (Execute action on user)
 router.post('/', async (req: AuthRequest, res) => {
     const { user_id, action } = req.body;

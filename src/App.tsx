@@ -8,6 +8,7 @@ import CalendarView from './components/CalendarView';
 import AdminPanel from './pages/AdminPanel';
 import Workplaces from './pages/Workplaces';
 import Reports from './pages/Reports';
+import Profile from './pages/Profile';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -28,6 +29,7 @@ function App() {
             <Route path="workplaces" element={<Workplaces />} />
             <Route path="reports" element={<Reports />} />
             <Route path="admin" element={<AdminPanel />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>
       </AuthProvider>

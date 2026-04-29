@@ -10,10 +10,23 @@ const Login: React.FC = () => {
     const [error, setError] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [fieldErrors, setFieldErrors] = useState<{email?: string, password?: string}>({});
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setFieldErrors({});
+
+        let hasError = false;
+        const newFieldErrors: {email?: string, password?: string} = {};
+        if (!email) { newFieldErrors.email = 'E-mail é obrigatório'; hasError = true; }
+        if (!password) { newFieldErrors.password = 'Senha é obrigatória'; hasError = true; }
+        
+        if (hasError) {
+            setFieldErrors(newFieldErrors);
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -49,8 +62,8 @@ const Login: React.FC = () => {
                     </div>
                 )}
 
-                <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-                    <div className="rounded-md shadow-sm -space-y-px">
+                <form className="mt-8 space-y-6" onSubmit={handleLogin} noValidate>
+                    <div className="rounded-md shadow-sm space-y-4">
                         <div className="relative">
                             <label htmlFor="email-address" className="sr-only">Endereço de Email</label>
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -61,14 +74,14 @@ const Login: React.FC = () => {
                                 name="email"
                                 type="email"
                                 autoComplete="email"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                                className={`appearance-none relative block w-full px-3 py-3 pl-10 border ${fieldErrors.email ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors`}
                                 placeholder="Seu email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
-                        <div className="relative">
+                        {fieldErrors.email && <span className="text-red-500 text-xs mt-1 block">{fieldErrors.email}</span>}
+                        <div className="relative mt-4">
                             <label htmlFor="password" className="sr-only">Senha</label>
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Lock className="h-5 w-5 text-gray-400" />
@@ -78,13 +91,13 @@ const Login: React.FC = () => {
                                 name="password"
                                 type="password"
                                 autoComplete="current-password"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                                className={`appearance-none relative block w-full px-3 py-3 pl-10 border ${fieldErrors.password ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors`}
                                 placeholder="Sua senha"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
+                        {fieldErrors.password && <span className="text-red-500 text-xs mt-1 block">{fieldErrors.password}</span>}
                     </div>
 
                     <div>

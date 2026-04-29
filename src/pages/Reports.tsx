@@ -17,9 +17,14 @@ interface Shift {
 }
 
 const Reports: React.FC = () => {
-    const [shifts, setShifts] = useState<Shift[]>([]);
-    const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 8) + '01'); // 1st of current month
-    const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10)); // Today
+    const getLocalYYYYMMDD = (d: Date) => {
+        const offset = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - offset).toISOString().slice(0, 10);
+    };
+
+    const todayStr = getLocalYYYYMMDD(new Date());
+    const [startDate, setStartDate] = useState(todayStr.slice(0, 8) + '01'); // 1st of current month
+    const [endDate, setEndDate] = useState(todayStr); // Today
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -211,9 +216,9 @@ const Reports: React.FC = () => {
 
             {/* Charts Grid */}
             <div className="grid lg:grid-cols-2 gap-8">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 className="text-lg font-bold mb-6">Ganhos por Local (Bruto vs Líquido)</h3>
-                    <div className="h-64">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
+                    <h3 className="text-lg font-bold mb-6 truncate">Ganhos por Local</h3>
+                    <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={earningsByLocation}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -228,9 +233,9 @@ const Reports: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 className="text-lg font-bold mb-6">Horas por Local</h3>
-                    <div className="h-64">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
+                    <h3 className="text-lg font-bold mb-6 truncate">Horas por Local</h3>
+                    <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={hoursByLocation}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />

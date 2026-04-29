@@ -33,9 +33,10 @@ const ChatAssistant: React.FC = () => {
         setLoading(true);
 
         try {
-            const res = await api.post('/ai/chat', { message: userMessage });
+            const res = await api.post('/api/ai/chat', { message: userMessage });
             setMessages(prev => [...prev, { role: 'model', text: res.data.response }]);
-        } catch (error) {
+        } catch (error: any) {
+            console.error('Chat AI Error:', error.response?.data || error.message);
             setMessages(prev => [...prev, { role: 'model', text: "Desculpe, não consegui conectar ao servidor." }]);
         } finally {
             setLoading(false);

@@ -18,6 +18,8 @@ interface Workplace {
 
 const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initialData }) => {
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [successMsg, setSuccessMsg] = useState('');
     const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
     const [formData, setFormData] = useState({
         location_name: '',
@@ -55,13 +57,20 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
         }
     };
 
+    const formatLocalDatetime = (dateStr: string) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        return date.toISOString().slice(0, 16);
+    };
+
     useEffect(() => {
         if (initialData) {
             setFormData({
                 location_name: initialData.location_name || '',
                 location_address: initialData.location_address || '',
-                start_time: initialData.start_time ? new Date(initialData.start_time).toISOString().slice(0, 16) : '',
-                end_time: initialData.end_time ? new Date(initialData.end_time).toISOString().slice(0, 16) : '',
+                start_time: initialData.start_time ? formatLocalDatetime(initialData.start_time) : '',
+                end_time: initialData.end_time ? formatLocalDatetime(initialData.end_time) : '',
                 payment_amount: initialData.payment_amount || '',
                 tax_percentage: initialData.tax_percentage !== undefined ? initialData.tax_percentage.toString() : '0',
                 shift_type: initialData.shift_type || 'regular',
@@ -146,6 +155,20 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const newErrors: Record<string, string> = {};
+        if (!formData.start_time) newErrors.start_time = 'Início é obrigatório';
+        if (!formData.end_time) newErrors.end_time = 'Término é obrigatório';
+        if (!formData.location_name) newErrors.location_name = 'Local é obrigatório';
+        if (formData.payment_type === 'fixed' && !formData.payment_amount) newErrors.payment_amount = 'Valor é obrigatório';
+        if (formData.payment_type === 'hourly' && !formData.hourly_rate) newErrors.hourly_rate = 'Valor da hora é obrigatório';
+        if (formData.payment_type === 'per_patient' && !formData.per_patient_rate) newErrors.per_patient_rate = 'Valor é obrigatório';
+        
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+        setErrors({});
         setLoading(true);
 
         try {
@@ -154,8 +177,12 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
             } else {
                 await api.post('/api/shifts', formData);
             }
-            onSave();
-            onClose();
+            setSuccessMsg('Plantão salvo com sucesso!');
+            setTimeout(() => {
+                onSave();
+                onClose();
+                setSuccessMsg('');
+            }, 1000);
         } catch (error: any) {
             console.error('Failed to save shift', error);
             const msg = error.response?.data?.error || 'Erro ao salvar plantão. Tente novamente.';
@@ -186,8 +213,14 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                     </button>
                 </div>
 
+                {successMsg && (
+                    <div className="bg-green-50 text-green-700 p-3 text-center font-medium border-b border-green-100">
+                        {successMsg}
+                    </div>
+                )}
+
                 <div className="overflow-y-auto flex-1 p-4 sm:p-6 pb-8 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                     {/* Basic Info */}
                     <div className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -196,7 +229,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                 <input
                                     type="datetime-local"
                                     required
-                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none"
+                                    className={`w-full px-4 py-2.5 rounded-lg border ${errors.start_time ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none`}
                                     value={formData.start_time}
                                     onChange={e => setFormData({ ...formData, start_time: e.target.value })}
                                     onFocus={(e) => {
@@ -205,13 +238,14 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                         }, 300);
                                     }}
                                 />
+                                {errors.start_time && <span className="text-red-500 text-xs mt-1 block">{errors.start_time}</span>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Término</label>
                                 <input
                                     type="datetime-local"
                                     required
-                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none"
+                                    className={`w-full px-4 py-2.5 rounded-lg border ${errors.end_time ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all bg-white appearance-none`}
                                     value={formData.end_time}
                                     onChange={e => setFormData({ ...formData, end_time: e.target.value })}
                                     onFocus={(e) => {
@@ -220,6 +254,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                         }, 300);
                                     }}
                                 />
+                                {errors.end_time && <span className="text-red-500 text-xs mt-1 block">{errors.end_time}</span>}
                             </div>
                         </div>
 
@@ -233,7 +268,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                         type="text"
                                         required
                                         placeholder="Selecione ou digite..."
-                                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                                        className={`w-full pl-10 pr-4 py-2.5 rounded-lg border ${errors.location_name ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all`}
                                         value={formData.location_name}
                                         onChange={e => handleLocationChange(e as any)}
                                         onFocus={(e) => {
@@ -248,6 +283,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onSave, initia
                                         ))}
                                     </datalist>
                                 </div>
+                                {errors.location_name && <span className="text-red-500 text-xs mt-1 block">{errors.location_name}</span>}
                             </div>
                         </div>
 

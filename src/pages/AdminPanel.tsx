@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, UserX, User, Loader, Users, Ban, Trash2, RefreshCw, Edit2, X } from 'lucide-react';
+import { UserCheck, UserX, User, Loader, Users, Ban, Trash2, RefreshCw, Edit2, X, Calendar, MapPin, DollarSign } from 'lucide-react';
 import api from '../api';
 
 interface UserData {
@@ -13,8 +13,9 @@ interface UserData {
 
 const AdminPanel: React.FC = () => {
     const [users, setUsers] = useState<UserData[]>([]);
+    const [globalShifts, setGlobalShifts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
+    const [activeTab, setActiveTab] = useState<'pending' | 'all' | 'shifts'>('pending');
     const [editingUser, setEditingUser] = useState<UserData | null>(null);
     const [editFormData, setEditFormData] = useState({ name: '', email: '', role: '' });
 
@@ -25,10 +26,15 @@ const AdminPanel: React.FC = () => {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await api.get(`/api/admin?type=${activeTab}`);
-            setUsers(res.data);
+            if (activeTab === 'shifts') {
+                const res = await api.get('/api/admin/shifts');
+                setGlobalShifts(res.data);
+            } else {
+                const res = await api.get(`/api/admin?type=${activeTab}`);
+                setUsers(res.data);
+            }
         } catch (error) {
-            console.error('Failed to fetch users');
+            console.error('Failed to fetch admin data');
         } finally {
             setLoading(false);
         }
@@ -100,13 +106,31 @@ const AdminPanel: React.FC = () => {
                         </span>
                         {activeTab === 'all' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600" />}
                     </button>
+                    <button
+                        onClick={() => setActiveTab('shifts')}
+                        className={`flex-1 py-4 text-center font-medium text-sm transition-colors relative ${activeTab === 'shifts' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        <span className="flex items-center justify-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            Plantões Globais
+                        </span>
+                        {activeTab === 'shifts' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600" />}
+                    </button>
                 </div>
 
                 {loading ? (
                     <div className="p-12 flex justify-center text-gray-400">
                         <Loader className="w-8 h-8 animate-spin" />
                     </div>
-                ) : users.length === 0 ? (
+                ) : activeTab === 'shifts' && globalShifts.length === 0 ? (
+                    <div className="p-12 text-center text-gray-500">
+                        <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Calendar className="w-8 h-8 text-gray-300" />
+                        </div>
+                        <p>Nenhum plantão encontrado no sistema.</p>
+                    </div>
+                ) : activeTab !== 'shifts' && users.length === 0 ? (
                     <div className="p-12 text-center text-gray-500">
                         <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                             {activeTab === 'pending' ? <UserCheck className="w-8 h-8 text-gray-300" /> : <Users className="w-8 h-8 text-gray-300" />}
@@ -115,7 +139,36 @@ const AdminPanel: React.FC = () => {
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-100">
-                        {users.map((user) => (
+                        {activeTab === 'shifts' ? globalShifts.map((shift) => (
+                            <div key={shift.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-gray-50 transition-colors">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-blue-100 text-blue-600">
+                                        <Calendar className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-sm font-bold text-gray-900">{shift.user_name}</h3>
+                                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide bg-gray-100 text-gray-600 border border-gray-200">
+                                                {shift.shift_type}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                                            <MapPin className="w-3 h-3" /> {shift.location_name}
+                                        </p>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Início: {new Date(shift.start_time).toLocaleString()} <br/> 
+                                            Fim: {new Date(shift.end_time).toLocaleString()}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-sm font-medium text-green-600 flex items-center gap-1 justify-end">
+                                        <DollarSign className="w-4 h-4" />
+                                        {Number(shift.payment_amount).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+                        )) : users.map((user) => (
                             <div key={user.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-gray-50 transition-colors">
                                 <div className="flex items-start gap-4">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${user.status === 'approved' ? 'bg-green-100 text-green-600' :
